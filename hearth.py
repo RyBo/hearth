@@ -8,6 +8,8 @@ import shutil
 import sys
 import os
 
+hearth_config = os.path.expanduser('~/.hearth/hearth.cfg')
+
 def create_dir(dir_name):
     try:
         os.makedirs(dir_name)
@@ -22,9 +24,21 @@ def get_args():
     return args
 
 def get_config(config_file):
+
     config = configparser.ConfigParser()
     try:
+        if not os.path.isfile(config_file):
+            print("Config file not found, generating one at " + config_file)
+            config['DEFAULT'] = {'ignores': ['.git', '.gitignore'],
+                                 'folders': False}
+            config['current'] = {'repo': dotfiles_path} 
+            try:
+                save_config(hearth_config, config)
+            except:
+                print("Error creating config file")
+
         config.read(config_file)
+
     except:
         print("Cannot read config file: {}".format(config_file))
         sys.exit(1)
@@ -100,7 +114,7 @@ def install_pathogen_packages(proj_home):
 
 def main():
     args = get_args()
-    config = get_config('hearth.cfg')
+    config = get_config(hearth_config)
 
     home = expanduser("~") + "/"
     hearth_home = home + ".hearth/"
@@ -147,10 +161,10 @@ def main():
         delete_all(local_backup)
         if old_proj:
             config.remove_option('current', 'repo')
-            save_config('hearth.cfg', config)
+            save_config(hearth_config, config)
     else:
         config.set('current', 'repo', proj_home)
-        save_config('hearth.cfg', config)
+        save_config(hearth_config, config)
 
 if __name__ == "__main__":
     main()
